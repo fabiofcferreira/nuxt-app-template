@@ -52,12 +52,12 @@ workflows:
   version: 2
   branches:
     jobs:
-      - all:
+      - all_generate:
           context: common-env-vars
           <<: *not_master
   release:
     jobs:
-      - master:
+      - master_generate:
           context: common-env-vars
           <<: *only_master
 
