@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 refs:
   - &only_master
