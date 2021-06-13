@@ -14,18 +14,24 @@ refs:
 
 jobs:
   all_build:
+    docker:
+      - image: cimg/node:16.3.0
     steps:
       - setup
       - build
       - lint
       - test
   all_generate:
+    docker:
+      - image: cimg/node:16.3.0
     steps:
       - setup
       - generate
       - lint
       - test
   master_build:
+    docker:
+      - image: cimg/node:16.3.0
     steps:
       - setup
       - build
@@ -33,6 +39,8 @@ jobs:
       - test
       - release_package
   master_generate:
+    docker:
+      - image: cimg/node:16.3.0
     steps:
       - setup
       - generate
@@ -44,12 +52,12 @@ workflows:
   version: 2
   branches:
     jobs:
-      - all:
+      - all_generate:
           context: common-env-vars
           <<: *not_master
   release:
     jobs:
-      - master:
+      - master_generate:
           context: common-env-vars
           <<: *only_master
 
