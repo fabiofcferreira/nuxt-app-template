@@ -6,7 +6,7 @@ refs:
       branches:
         only:
           - master
-  - &not_master:
+  - &not_master
     filters:
       branches:
         ignore:
