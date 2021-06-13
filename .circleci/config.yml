@@ -1,6 +1,14 @@
 version: 2.1
 
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:16.3.0
+
 refs:
+  - &executor
+      executor:
+        name: node-executor
   - &only_master
     filters:
       branches:
@@ -14,24 +22,21 @@ refs:
 
 jobs:
   all_build:
-    docker:
-      - image: cimg/node:16.3.0
+    <<: *executor
     steps:
       - setup
       - build
       - lint
       - test
   all_generate:
-    docker:
-      - image: cimg/node:16.3.0
+    <<: *executor
     steps:
       - setup
       - generate
       - lint
       - test
   master_build:
-    docker:
-      - image: cimg/node:16.3.0
+    <<: *executor
     steps:
       - setup
       - build
@@ -39,8 +44,7 @@ jobs:
       - test
       - release_package
   master_generate:
-    docker:
-      - image: cimg/node:16.3.0
+    <<: *executor
     steps:
       - setup
       - generate
