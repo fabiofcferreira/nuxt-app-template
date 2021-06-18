@@ -1,0 +1,154 @@
+version: 2.1
+
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:16.3.0
+
+refs:
+  - &executor
+      executor:
+        name: node-executor
+  - &only_master
+    filters:
+      branches:
+        only:
+          - master
+  - &not_master
+    filters:
+      branches:
+        ignore:
+          - master
+
+workflows:
+  version: 2
+  all:
+    jobs:
+      - all:
+          context: common-env-vars
+          <<: *not_master
+
+  master:
+    jobs:
+      - deploy-staging:
+          context: common-env-vars
+          <<: *only_master
+      - approve-prod:
+          type: approval
+          context: common-env-vars
+          requires:
+            - deploy-staging
+          <<: *only_master
+      - release_package:
+          context: common-env-vars
+          requires:
+            - deploy-staging
+          <<: *only_master
+      - deploy-prod:
+          context: common-env-vars
+          requires:
+            - approve-prod
+          <<: *only_master
+
+jobs:
+  all:
+    <<: *executor
+    steps:
+      - setup
+      - build:
+          environment: staging
+      - test
+
+  deploy-staging:
+    <<: *executor
+    steps:
+      - setup
+      - build:
+          environment: staging
+      - test
+      - deploy:
+          environment: staging
+
+  deploy-prod:
+    <<: *executor
+    steps:
+      - setup
+      - build:
+          environment: production
+      - test
+      - deploy:
+          environment: production
+
+commands:
+  setup:
+    steps:
+      - checkout
+      - run:
+          name: Versions
+          command: node -v && npm -v && yarn -v
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - v1-yarn-node-modules-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install Dependencies
+          command: yarn install --frozen-lockfile
+      - save_cache:
+          key: yarn-v1-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+
+  # Here you can choose which process you'd like to use (build vs generate)
+  build:
+    parameters:
+      environment:
+        type: enum
+        enum: ["staging", "production"]
+    steps:
+      # 1. Generate example
+      # - run:
+      #     name: Build (Generate static app)
+      #     command: yarn generate
+      # 2. Build example
+      # - run:
+      #     name: Build
+      #     command: yarn build
+      - run:
+          name: Lint
+          command: yarn lint
+      - run:
+          name: Test
+          command: yarn test
+      - run:
+          name: Prettier (check "yarn prettier:write" has been run)
+          command: yarn prettier:check
+
+  deploy:
+    description: Deploy the app
+    parameters:
+      environment:
+        type: enum
+        enum: ["staging", "production"]
+    steps:
+      - when:
+          condition:
+            - equal: [ staging, << parameter.environment >> ]
+          steps:
+            - run:
+                name: Trigger staging Netlify build
+                command: curl -X POST -d {} ${NETLIFY_STAGING_BUILD_HOOK}
+      - when:
+          condition:
+            - equal: [ production, << parameter.environment >> ]
+          steps:
+            - run:
+                name: Trigger production Netlify build
+                command: curl -X POST -d {} ${NETLIFY_PRODUCTION_BUILD_HOOK}
+
+  release_package:
+    steps:
+      - run:
+          name: Release
+          command: |
+            npx semantic-release &&
+            npx commit-status success Version "'\${PROJECT_VERSION}'"

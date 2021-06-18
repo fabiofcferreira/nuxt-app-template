@@ -20,6 +20,19 @@ refs:
         ignore:
           - master
 
+workflows:
+  version: 2
+  branches:
+    jobs:
+      - all_generate:
+          context: common-env-vars
+          <<: *not_master
+  release:
+    jobs:
+      - master_generate:
+          context: common-env-vars
+          <<: *only_master
+
 jobs:
   all_build:
     <<: *executor
@@ -51,19 +64,6 @@ jobs:
       - lint
       - test
       - release_package
-
-workflows:
-  version: 2
-  branches:
-    jobs:
-      - all_generate:
-          context: common-env-vars
-          <<: *not_master
-  release:
-    jobs:
-      - master_generate:
-          context: common-env-vars
-          <<: *only_master
 
 commands:
   setup:
