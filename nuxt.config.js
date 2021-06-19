@@ -52,4 +52,13 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {},
-}
+
+  // Typescript runtime lint configuration (https://typescript.nuxtjs.org/guide/lint#runtime-lint)
+  typescript: {
+    typeCheck: {
+      eslint: {
+        files: './**/*.{ts,js,vue}',
+      },
+    },
+  },
+};
