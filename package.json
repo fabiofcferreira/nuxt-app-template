@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "lint-staged": {
-    "*.{js,vue}": [
+    "*.{js,ts,vue}": [
       "prettier --ignore-path .gitignore --write",
       "eslint",
       "git add"
