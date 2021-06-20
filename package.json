@@ -11,8 +11,8 @@
   },
   "lint-staged": {
     "*.{js,ts,vue}": [
-      "prettier --ignore-path .gitignore --write",
-      "eslint",
+      "prettier --ignore-path .gitignore --write .",
+      "eslint --ext '.ts,.js,.vue' --ignore-path .gitignore .",
       "git add"
     ]
   },
